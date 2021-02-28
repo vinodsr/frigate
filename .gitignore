@@ -1,4 +1,12 @@
-*.pyc 
+.DS_Store
+*.pyc
 debug
 .vscode
 config/config.yml
+models
+*.mp4
+*.db
+frigate/version.py
+web/build
+web/node_modules
+web/coverage

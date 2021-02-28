@@ -1,29 +1,32 @@
-import time
-import datetime
-import threading
-import cv2
-import itertools
 import copy
-import numpy as np
+import datetime
+import itertools
+import multiprocessing as mp
 import random
 import string
-import multiprocessing as mp
+import threading
+import time
 from collections import defaultdict
+
+import cv2
+import numpy as np
 from scipy.spatial import distance as dist
-from frigate.util import draw_box_with_label, calculate_region
+
+from frigate.config import DetectConfig
+from frigate.util import draw_box_with_label
+
 
 class ObjectTracker():
-    def __init__(self, max_disappeared):
+    def __init__(self, config: DetectConfig):
         self.tracked_objects = {}
         self.disappeared = {}
-        self.max_disappeared = max_disappeared
+        self.max_disappeared = config.max_disappeared
 
     def register(self, index, obj):
         rand_id = ''.join(random.choices(string.ascii_lowercase + string.digits, k=6))
         id = f"{obj['frame_time']}-{rand_id}"
         obj['id'] = id
         obj['start_time'] = obj['frame_time']
-        obj['top_score'] = obj['score']
         self.tracked_objects[id] = obj
         self.disappeared[id] = 0
 
@@ -34,8 +37,6 @@ class ObjectTracker():
     def update(self, id, new_obj):
         self.disappeared[id] = 0
         self.tracked_objects[id].update(new_obj)
-        if self.tracked_objects[id]['score'] > self.tracked_objects[id]['top_score']:
-            self.tracked_objects[id]['top_score'] = self.tracked_objects[id]['score']
 
     def match_and_update(self, frame_time, new_objects):
         # group by name
